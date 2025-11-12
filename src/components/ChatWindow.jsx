@@ -72,9 +72,9 @@ const ChatWindow = () => {
 
         {/* Action Buttons */}
         <div className="flex gap-2">
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title="Settings">
+          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600" title="Settings">
             <svg
-              className="w-5 h-5 text-gray-600"
+              className="w-5 h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

@@ -1,5 +1,9 @@
+import { useState } from 'react';
+
 const MessageItem = ({ message }) => {
   const isUser = message.role === 'user';
+  const [copied, setCopied] = useState(false);
+  const [copiedCode, setCopiedCode] = useState({});
 
   // Format timestamp for display
   const formatTimestamp = (timestamp) => {
@@ -44,24 +48,46 @@ const MessageItem = ({ message }) => {
           codeBlock = line.trim().substring(3).trim() || 'code';
         } else {
           // End code block
+          const codeBlockId = `code-${index}`;
+          const codeContent = codeLines.join('\n');
           elements.push(
-            <div key={`code-${index}`} className="my-4 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+            <div key={codeBlockId} className="my-4 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
               <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-4 py-2.5 flex items-center justify-between">
                 <span className="text-xs text-gray-300 font-semibold uppercase tracking-wide">{codeBlock}</span>
                 <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(codeLines.join('\n'));
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    try {
+                      await navigator.clipboard.writeText(codeContent);
+                      setCopiedCode(prev => ({ ...prev, [codeBlockId]: true }));
+                      setTimeout(() => {
+                        setCopiedCode(prev => ({ ...prev, [codeBlockId]: false }));
+                      }, 2000);
+                    } catch (err) {
+                      console.error('Failed to copy code:', err);
+                    }
                   }}
                   className="flex items-center gap-1.5 text-xs text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded transition-colors"
                 >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  Copy
+                  {copiedCode[codeBlockId] ? (
+                    <>
+                      <svg className="w-3.5 h-3.5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      Copy
+                    </>
+                  )}
                 </button>
               </div>
               <pre className="bg-gray-950 text-gray-100 p-4 overflow-x-auto">
-                <code className="text-sm font-mono leading-relaxed">{codeLines.join('\n')}</code>
+                <code className="text-sm font-mono leading-relaxed">{codeContent}</code>
               </pre>
             </div>
           );
@@ -205,8 +231,21 @@ const MessageItem = ({ message }) => {
       return placeholder;
     });
 
-    // Bold (**text** or __text__)
-    currentText = currentText.replace(/(\*\*|__)((?!\1).+?)\1/g, (match, marker, bold) => {
+    // Bold - handle both **text** and __text__
+    // Process ** first with a simpler, more reliable pattern
+    currentText = currentText.replace(/\*\*(.+?)\*\*/g, (match, bold) => {
+      const placeholder = `__BOLD_${key}__`;
+      parts.push({
+        type: 'bold',
+        content: bold,
+        placeholder
+      });
+      key++;
+      return placeholder;
+    });
+    
+    // Then handle __ patterns
+    currentText = currentText.replace(/__(.+?)__/g, (match, bold) => {
       const placeholder = `__BOLD_${key}__`;
       parts.push({
         type: 'bold',
@@ -217,8 +256,19 @@ const MessageItem = ({ message }) => {
       return placeholder;
     });
 
-    // Italic (*text* or _text_) - but not if it's part of ** or __
+    // Italic - single * or _ (but not double)
     currentText = currentText.replace(/(?<!\*)\*(?!\*)([^*]+?)\*(?!\*)/g, (match, italic) => {
+      const placeholder = `__ITALIC_${key}__`;
+      parts.push({
+        type: 'italic',
+        content: italic,
+        placeholder
+      });
+      key++;
+      return placeholder;
+    });
+    
+    currentText = currentText.replace(/(?<!_)_(?!_)([^_]+?)_(?!_)/g, (match, italic) => {
       const placeholder = `__ITALIC_${key}__`;
       parts.push({
         type: 'italic',
@@ -246,6 +296,9 @@ const MessageItem = ({ message }) => {
     const segments = currentText.split(/(__(?:CODE|BOLD|ITALIC|LINK)_\d+__)/g);
     
     return segments.map((segment, index) => {
+      // Skip empty segments
+      if (!segment) return null;
+      
       const part = parts.find(p => p.placeholder === segment);
       
       if (part) {
@@ -277,16 +330,16 @@ const MessageItem = ({ message }) => {
         }
       }
       
-      return segment;
-    });
+      // Return text segment only if it's not a placeholder
+      return <span key={index}>{segment}</span>;
+    }).filter(Boolean);
   };
 
   return (
     <div
       className={`
-        flex gap-3 p-6 mb-4 group hover:bg-opacity-80 transition-all
+        flex gap-3 p-6 mb-4 group hover:bg-opacity-80 transition-all rounded-xl shadow-sm hover:shadow-md
         ${isUser ? 'bg-white border-l-4 border-blue-500' : 'bg-gradient-to-r from-purple-50 to-pink-50 border-l-4 border-purple-500'}
-        rounded-xl shadow-sm hover:shadow-md
       `}
     >
       {/* Avatar */}
@@ -325,15 +378,27 @@ const MessageItem = ({ message }) => {
             )}
             {!isUser && (
               <button
-                onClick={() => {
-                  navigator.clipboard.writeText(message.content);
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(message.content);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  } catch (err) {
+                    console.error('Failed to copy:', err);
+                  }
                 }}
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-white rounded-lg"
-                title="Copy message"
+                className="opacity-0 group-hover:opacity-100 transition-all p-1.5 hover:bg-white rounded-lg"
+                title={copied ? "Copied!" : "Copy message"}
               >
-                <svg className="w-4 h-4 text-gray-500 hover:text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
+                {copied ? (
+                  <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4 text-gray-500 hover:text-purple-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                )}
               </button>
             )}
           </div>
