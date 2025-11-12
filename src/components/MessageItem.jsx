@@ -5,6 +5,80 @@ const MessageItem = ({ message }) => {
   const [copied, setCopied] = useState(false);
   const [copiedCode, setCopiedCode] = useState({});
 
+  // Syntax highlighting for code blocks (using React components)
+  const highlightCode = (code, language) => {
+    if (!code) return [];
+    
+    const lines = code.split('\n');
+    return lines.map((line, lineIndex) => {
+      const tokens = [];
+      let remaining = line;
+      let tokenKey = 0;
+      
+      // Process the line to find different token types
+      while (remaining.length > 0) {
+        let matched = false;
+        
+        // Comments (highest priority to avoid processing content inside)
+        const commentMatch = remaining.match(/^(\/\/.*$|\/\*[\s\S]*?\*\/)/);
+        if (commentMatch) {
+          tokens.push(<span key={`${lineIndex}-${tokenKey++}`} className="text-gray-500 italic">{commentMatch[0]}</span>);
+          remaining = remaining.slice(commentMatch[0].length);
+          matched = true;
+          continue;
+        }
+        
+        // Strings
+        const stringMatch = remaining.match(/^("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)/);
+        if (stringMatch) {
+          tokens.push(<span key={`${lineIndex}-${tokenKey++}`} className="text-green-400">{stringMatch[0]}</span>);
+          remaining = remaining.slice(stringMatch[0].length);
+          matched = true;
+          continue;
+        }
+        
+        // Keywords
+        const keywordMatch = remaining.match(/^(function|const|let|var|if|else|return|for|while|class|import|export|from|async|await|try|catch|throw|new|this|super|extends|implements|interface|type|enum|namespace|module|require|default|case|switch|break|continue|do|in|of|typeof|instanceof|void|delete|yield|static|public|private|protected|abstract|readonly|get|set)\b/);
+        if (keywordMatch) {
+          tokens.push(<span key={`${lineIndex}-${tokenKey++}`} className="text-purple-400 font-semibold">{keywordMatch[0]}</span>);
+          remaining = remaining.slice(keywordMatch[0].length);
+          matched = true;
+          continue;
+        }
+        
+        // Numbers
+        const numberMatch = remaining.match(/^\b(\d+\.?\d*)\b/);
+        if (numberMatch) {
+          tokens.push(<span key={`${lineIndex}-${tokenKey++}`} className="text-orange-400">{numberMatch[0]}</span>);
+          remaining = remaining.slice(numberMatch[0].length);
+          matched = true;
+          continue;
+        }
+        
+        // Function calls
+        const functionMatch = remaining.match(/^([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/);
+        if (functionMatch) {
+          tokens.push(<span key={`${lineIndex}-${tokenKey++}`} className="text-yellow-300">{functionMatch[1]}</span>);
+          remaining = remaining.slice(functionMatch[1].length);
+          matched = true;
+          continue;
+        }
+        
+        // Default: regular character
+        if (!matched) {
+          tokens.push(<span key={`${lineIndex}-${tokenKey++}`}>{remaining[0]}</span>);
+          remaining = remaining.slice(1);
+        }
+      }
+      
+      return (
+        <div key={lineIndex}>
+          {tokens.length > 0 ? tokens : '\n'}
+        </div>
+      );
+    });
+  };
+
   // Format timestamp for display
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return '';
@@ -50,6 +124,8 @@ const MessageItem = ({ message }) => {
           // End code block
           const codeBlockId = `code-${index}`;
           const codeContent = codeLines.join('\n');
+          const highlightedCode = highlightCode(codeContent, codeBlock);
+          
           elements.push(
             <div key={codeBlockId} className="my-4 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
               <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-4 py-2.5 flex items-center justify-between">
@@ -86,8 +162,10 @@ const MessageItem = ({ message }) => {
                   )}
                 </button>
               </div>
-              <pre className="bg-gray-950 text-gray-100 p-4 overflow-x-auto">
-                <code className="text-sm font-mono leading-relaxed">{codeContent}</code>
+              <pre className="bg-[#1e1e1e] text-gray-100 p-4 overflow-x-auto">
+                <code className="text-sm font-mono leading-relaxed block">
+                  {highlightedCode}
+                </code>
               </pre>
             </div>
           );
@@ -215,13 +293,15 @@ const MessageItem = ({ message }) => {
 
   // Format inline styles (bold, italic, code, links)
   const formatInlineStyles = (text) => {
+    if (!text) return null;
+    
     const parts = [];
-    let currentText = text;
+    let currentText = String(text);
     let key = 0;
 
     // Inline code (must be before bold/italic to avoid conflicts)
-    currentText = currentText.replace(/`([^`]+)`/g, (match, code) => {
-      const placeholder = `__CODE_${key}__`;
+    currentText = currentText.replace(/`([^`]+?)`/g, (match, code) => {
+      const placeholder = `__XCODE${key}X__`;
       parts.push({
         type: 'code',
         content: code,
@@ -231,22 +311,9 @@ const MessageItem = ({ message }) => {
       return placeholder;
     });
 
-    // Bold - handle both **text** and __text__
-    // Process ** first with a simpler, more reliable pattern
-    currentText = currentText.replace(/\*\*(.+?)\*\*/g, (match, bold) => {
-      const placeholder = `__BOLD_${key}__`;
-      parts.push({
-        type: 'bold',
-        content: bold,
-        placeholder
-      });
-      key++;
-      return placeholder;
-    });
-    
-    // Then handle __ patterns
-    currentText = currentText.replace(/__(.+?)__/g, (match, bold) => {
-      const placeholder = `__BOLD_${key}__`;
+    // Bold - handle **text** pattern only
+    currentText = currentText.replace(/\*\*([^*]+?)\*\*/g, (match, bold) => {
+      const placeholder = `__XBOLD${key}X__`;
       parts.push({
         type: 'bold',
         content: bold,
@@ -256,20 +323,9 @@ const MessageItem = ({ message }) => {
       return placeholder;
     });
 
-    // Italic - single * or _ (but not double)
+    // Italic - single * (but not double)
     currentText = currentText.replace(/(?<!\*)\*(?!\*)([^*]+?)\*(?!\*)/g, (match, italic) => {
-      const placeholder = `__ITALIC_${key}__`;
-      parts.push({
-        type: 'italic',
-        content: italic,
-        placeholder
-      });
-      key++;
-      return placeholder;
-    });
-    
-    currentText = currentText.replace(/(?<!_)_(?!_)([^_]+?)_(?!_)/g, (match, italic) => {
-      const placeholder = `__ITALIC_${key}__`;
+      const placeholder = `__XITALIC${key}X__`;
       parts.push({
         type: 'italic',
         content: italic,
@@ -281,7 +337,7 @@ const MessageItem = ({ message }) => {
 
     // Links [text](url)
     currentText = currentText.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
-      const placeholder = `__LINK_${key}__`;
+      const placeholder = `__XLINK${key}X__`;
       parts.push({
         type: 'link',
         content: text,
@@ -293,7 +349,7 @@ const MessageItem = ({ message }) => {
     });
 
     // Replace placeholders with React elements
-    const segments = currentText.split(/(__(?:CODE|BOLD|ITALIC|LINK)_\d+__)/g);
+    const segments = currentText.split(/(__X(?:CODE|BOLD|ITALIC|LINK)\d+X__)/g);
     
     return segments.map((segment, index) => {
       // Skip empty segments
@@ -330,8 +386,12 @@ const MessageItem = ({ message }) => {
         }
       }
       
-      // Return text segment only if it's not a placeholder
-      return <span key={index}>{segment}</span>;
+      // Only return text if it's not a placeholder pattern
+      if (!segment.match(/^__X(?:CODE|BOLD|ITALIC|LINK)\d+X__$/)) {
+        return segment;
+      }
+      
+      return null;
     }).filter(Boolean);
   };
 
