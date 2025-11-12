@@ -103,7 +103,7 @@ const MessageItem = ({ message }) => {
   // Format AI message content with markdown-like rendering
   const formatContent = (content) => {
     if (isUser) {
-      return <div className="text-gray-800 whitespace-pre-wrap break-words">{content}</div>;
+      return <div className="text-gray-800 whitespace-pre-wrap break-words text-sm sm:text-base">{content}</div>;
     }
 
     // Split content into lines for processing
@@ -162,8 +162,8 @@ const MessageItem = ({ message }) => {
                   )}
                 </button>
               </div>
-              <pre className="bg-[#1e1e1e] text-gray-100 p-4 overflow-x-auto">
-                <code className="text-sm font-mono leading-relaxed block">
+              <pre className="bg-[#1e1e1e] text-gray-100 p-3 sm:p-4 overflow-x-auto text-xs sm:text-sm">
+                <code className="font-mono leading-relaxed block">
                   {highlightedCode}
                 </code>
               </pre>
@@ -208,7 +208,7 @@ const MessageItem = ({ message }) => {
       // Headers
       if (line.startsWith('### ')) {
         elements.push(
-          <h3 key={index} className="text-xl font-bold text-gray-900 mt-5 mb-3 border-b border-gray-200 pb-2">
+          <h3 key={index} className="text-lg sm:text-xl font-bold text-gray-900 mt-4 sm:mt-5 mb-2 sm:mb-3 border-b border-gray-200 pb-2 break-words">
             {line.substring(4)}
           </h3>
         );
@@ -217,7 +217,7 @@ const MessageItem = ({ message }) => {
 
       if (line.startsWith('## ')) {
         elements.push(
-          <h2 key={index} className="text-2xl font-bold text-gray-900 mt-6 mb-3 border-b-2 border-purple-200 pb-2">
+          <h2 key={index} className="text-xl sm:text-2xl font-bold text-gray-900 mt-5 sm:mt-6 mb-2 sm:mb-3 border-b-2 border-purple-200 pb-2 break-words">
             {line.substring(3)}
           </h2>
         );
@@ -226,7 +226,7 @@ const MessageItem = ({ message }) => {
 
       if (line.startsWith('# ')) {
         elements.push(
-          <h1 key={index} className="text-3xl font-bold text-gray-900 mt-6 mb-4 border-b-2 border-purple-300 pb-3">
+          <h1 key={index} className="text-2xl sm:text-3xl font-bold text-gray-900 mt-5 sm:mt-6 mb-3 sm:mb-4 border-b-2 border-purple-300 pb-3 break-words">
             {line.substring(2)}
           </h1>
         );
@@ -265,7 +265,7 @@ const MessageItem = ({ message }) => {
       // Regular paragraph
       if (line.trim()) {
         elements.push(
-          <p key={index} className="my-2 leading-7 text-gray-800">
+          <p key={index} className="my-2 leading-6 sm:leading-7 text-gray-800 text-sm sm:text-base break-words">
             {formatInlineStyles(line)}
           </p>
         );
@@ -288,7 +288,7 @@ const MessageItem = ({ message }) => {
       );
     }
 
-    return <div className="text-gray-800">{elements}</div>;
+    return <div className="text-gray-800 text-sm sm:text-base">{elements}</div>;
   };
 
   // Format inline styles (bold, italic, code, links)
@@ -360,16 +360,16 @@ const MessageItem = ({ message }) => {
       if (part) {
         if (part.type === 'code') {
           return (
-            <code key={index} className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-sm font-mono border border-purple-200">
+            <code key={index} className="bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded text-xs sm:text-sm font-mono border border-purple-200 break-all">
               {part.content}
             </code>
           );
         }
         if (part.type === 'bold') {
-          return <strong key={index} className="font-bold text-gray-900">{part.content}</strong>;
+          return <strong key={index} className="font-bold text-gray-900 break-words">{part.content}</strong>;
         }
         if (part.type === 'italic') {
-          return <em key={index} className="italic text-gray-700">{part.content}</em>;
+          return <em key={index} className="italic text-gray-700 break-words">{part.content}</em>;
         }
         if (part.type === 'link') {
           return (
@@ -378,7 +378,7 @@ const MessageItem = ({ message }) => {
               href={part.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-700 underline font-medium"
+              className="text-blue-600 hover:text-blue-700 underline font-medium break-all"
             >
               {part.content}
             </a>
@@ -398,19 +398,20 @@ const MessageItem = ({ message }) => {
   return (
     <div
       className={`
-        flex gap-3 p-6 mb-4 group hover:bg-opacity-80 transition-all rounded-xl shadow-sm hover:shadow-md
+        flex gap-2 sm:gap-3 p-3 sm:p-6 mb-2 sm:mb-4 group hover:bg-opacity-80 transition-all rounded-xl shadow-sm hover:shadow-md
+        max-w-full
         ${isUser ? 'bg-white border-l-4 border-blue-500' : 'bg-gradient-to-r from-purple-50 to-pink-50 border-l-4 border-purple-500'}
       `}
     >
       {/* Avatar */}
       <div
         className={`
-          flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-md
+          flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-md
           ${isUser ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 'bg-gradient-to-br from-purple-500 to-pink-500'}
         `}
       >
         {isUser ? (
-          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+          <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"
               d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
@@ -418,15 +419,15 @@ const MessageItem = ({ message }) => {
             />
           </svg>
         ) : (
-          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
           </svg>
         )}
       </div>
 
       {/* Message Content */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between mb-2">
+      <div className="flex-1 min-w-0 max-w-full">
+        <div className="flex items-center justify-between mb-1 sm:mb-2 flex-wrap gap-1">
           <span className={`font-bold text-sm ${isUser ? 'text-blue-700' : 'text-purple-700'}`}>
             {isUser ? 'You' : 'AI Assistant'}
           </span>
