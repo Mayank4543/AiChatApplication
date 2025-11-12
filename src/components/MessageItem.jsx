@@ -45,20 +45,23 @@ const MessageItem = ({ message }) => {
         } else {
           // End code block
           elements.push(
-            <div key={`code-${index}`} className="my-3">
-              <div className="bg-gray-900 rounded-t-lg px-4 py-2 flex items-center justify-between">
-                <span className="text-xs text-gray-400 font-mono">{codeBlock}</span>
+            <div key={`code-${index}`} className="my-4 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+              <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-4 py-2.5 flex items-center justify-between">
+                <span className="text-xs text-gray-300 font-semibold uppercase tracking-wide">{codeBlock}</span>
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(codeLines.join('\n'));
                   }}
-                  className="text-xs text-gray-400 hover:text-white transition-colors"
+                  className="flex items-center gap-1.5 text-xs text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded transition-colors"
                 >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
                   Copy
                 </button>
               </div>
-              <pre className="bg-gray-950 text-gray-100 p-4 rounded-b-lg overflow-x-auto">
-                <code className="text-sm font-mono">{codeLines.join('\n')}</code>
+              <pre className="bg-gray-950 text-gray-100 p-4 overflow-x-auto">
+                <code className="text-sm font-mono leading-relaxed">{codeLines.join('\n')}</code>
               </pre>
             </div>
           );
@@ -77,11 +80,11 @@ const MessageItem = ({ message }) => {
       // End list if needed
       if (inList && !line.trim().match(/^[-*•]\s/)) {
         elements.push(
-          <ul key={`list-${index}`} className="my-2 ml-4 space-y-1">
+          <ul key={`list-${index}`} className="my-3 space-y-2">
             {listItems.map((item, i) => (
-              <li key={i} className="flex items-start gap-2">
-                <span className="text-purple-600 mt-1">•</span>
-                <span className="flex-1">{formatInlineStyles(item)}</span>
+              <li key={i} className="flex items-start gap-3 pl-2">
+                <span className="text-purple-600 font-bold mt-1 flex-shrink-0">•</span>
+                <span className="flex-1 text-gray-800">{formatInlineStyles(item)}</span>
               </li>
             ))}
           </ul>
@@ -101,7 +104,7 @@ const MessageItem = ({ message }) => {
       // Headers
       if (line.startsWith('### ')) {
         elements.push(
-          <h3 key={index} className="text-lg font-bold text-gray-900 mt-4 mb-2">
+          <h3 key={index} className="text-xl font-bold text-gray-900 mt-5 mb-3 border-b border-gray-200 pb-2">
             {line.substring(4)}
           </h3>
         );
@@ -110,7 +113,7 @@ const MessageItem = ({ message }) => {
 
       if (line.startsWith('## ')) {
         elements.push(
-          <h2 key={index} className="text-xl font-bold text-gray-900 mt-4 mb-2">
+          <h2 key={index} className="text-2xl font-bold text-gray-900 mt-6 mb-3 border-b-2 border-purple-200 pb-2">
             {line.substring(3)}
           </h2>
         );
@@ -119,7 +122,7 @@ const MessageItem = ({ message }) => {
 
       if (line.startsWith('# ')) {
         elements.push(
-          <h1 key={index} className="text-2xl font-bold text-gray-900 mt-4 mb-2">
+          <h1 key={index} className="text-3xl font-bold text-gray-900 mt-6 mb-4 border-b-2 border-purple-300 pb-3">
             {line.substring(2)}
           </h1>
         );
@@ -129,10 +132,11 @@ const MessageItem = ({ message }) => {
       // Numbered list
       if (line.trim().match(/^\d+\.\s/)) {
         const item = line.trim().replace(/^\d+\.\s/, '');
+        const number = line.match(/^\d+/)[0];
         elements.push(
-          <div key={index} className="flex items-start gap-2 my-1">
-            <span className="text-purple-600 font-semibold">{line.match(/^\d+/)[0]}.</span>
-            <span className="flex-1">{formatInlineStyles(item)}</span>
+          <div key={index} className="flex items-start gap-3 my-2 pl-2">
+            <span className="text-purple-600 font-bold flex-shrink-0 min-w-[24px]">{number}.</span>
+            <span className="flex-1 text-gray-800">{formatInlineStyles(item)}</span>
           </div>
         );
         return;
@@ -141,7 +145,7 @@ const MessageItem = ({ message }) => {
       // Blockquote
       if (line.trim().startsWith('> ')) {
         elements.push(
-          <blockquote key={index} className="border-l-4 border-purple-600 pl-4 py-2 my-2 italic text-gray-700 bg-purple-50 rounded-r">
+          <blockquote key={index} className="border-l-4 border-purple-500 pl-4 py-3 my-3 italic text-gray-700 bg-purple-50 rounded-r-lg">
             {formatInlineStyles(line.substring(2))}
           </blockquote>
         );
@@ -150,30 +154,30 @@ const MessageItem = ({ message }) => {
 
       // Horizontal rule
       if (line.trim() === '---' || line.trim() === '***') {
-        elements.push(<hr key={index} className="my-4 border-gray-300" />);
+        elements.push(<hr key={index} className="my-6 border-t-2 border-gray-200" />);
         return;
       }
 
       // Regular paragraph
       if (line.trim()) {
         elements.push(
-          <p key={index} className="my-2 leading-relaxed">
+          <p key={index} className="my-2 leading-7 text-gray-800">
             {formatInlineStyles(line)}
           </p>
         );
       } else {
-        elements.push(<div key={index} className="h-2" />);
+        elements.push(<div key={index} className="h-3" />);
       }
     });
 
     // Flush remaining list items
     if (listItems.length > 0) {
       elements.push(
-        <ul key="list-end" className="my-2 ml-4 space-y-1">
+        <ul key="list-end" className="my-3 space-y-2">
           {listItems.map((item, i) => (
-            <li key={i} className="flex items-start gap-2">
-              <span className="text-purple-600 mt-1">•</span>
-              <span className="flex-1">{formatInlineStyles(item)}</span>
+            <li key={i} className="flex items-start gap-3 pl-2">
+              <span className="text-purple-600 font-bold mt-1 flex-shrink-0">•</span>
+              <span className="flex-1 text-gray-800">{formatInlineStyles(item)}</span>
             </li>
           ))}
         </ul>
