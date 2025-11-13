@@ -114,7 +114,7 @@ const MessageInput = ({ onSendMessage }) => {
             type="button"
             onClick={toggleVoiceInput}
             disabled={isLoading}
-            className={`p-2 sm:p-3 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 ${
+            className={`p-2 sm:p-3 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed shrink-0 ${
               isListening 
                 ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
                 : 'bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white'
@@ -173,7 +173,7 @@ const MessageInput = ({ onSendMessage }) => {
           <button
             type="submit"
             disabled={!message.trim() || isLoading || isOverLimit}
-            className="px-3 sm:px-6 py-2 sm:py-3 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-1 sm:gap-2 min-h-10 sm:min-h-14 flex-shrink-0"
+            className="px-3 sm:px-6 py-2 sm:py-3 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-1 sm:gap-2 min-h-10 sm:min-h-14 shrink-0"
           >
             {isLoading ? (
               <>
@@ -207,7 +207,7 @@ const MessageInput = ({ onSendMessage }) => {
         {/* Listening Indicator */}
         {isListening && (
           <div className="mt-2 flex items-center gap-2 text-xs sm:text-sm text-red-600">
-            <svg className="w-3 h-3 sm:w-4 sm:h-4 animate-pulse flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-3 h-3 sm:w-4 sm:h-4 animate-pulse shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
             </svg>
             <span className="truncate">Listening... Speak now</span>
