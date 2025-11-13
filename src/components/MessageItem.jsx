@@ -1,9 +1,10 @@
 import { useState } from 'react';
 
-const MessageItem = ({ message }) => {
+const MessageItem = ({ message, onRetry }) => {
   const isUser = message.role === 'user';
   const [copied, setCopied] = useState(false);
   const [copiedCode, setCopiedCode] = useState({});
+  const isError = message.error === true;
 
   // Syntax highlighting for code blocks (using React components)
   const highlightCode = (code, language) => {
@@ -127,7 +128,7 @@ const MessageItem = ({ message }) => {
           const highlightedCode = highlightCode(codeContent, codeBlock);
           
           elements.push(
-            <div key={codeBlockId} className="my-4 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+            <div key={codeBlockId} className="my-4 rounded-lg overflow-hidden border border-gray-200 shadow-sm max-w-full">
               <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-4 py-2.5 flex items-center justify-between">
                 <span className="text-xs text-gray-300 font-semibold uppercase tracking-wide">{codeBlock}</span>
                 <button
@@ -162,8 +163,8 @@ const MessageItem = ({ message }) => {
                   )}
                 </button>
               </div>
-              <pre className="bg-[#1e1e1e] text-gray-100 p-3 sm:p-4 overflow-x-auto text-xs sm:text-sm">
-                <code className="font-mono leading-relaxed block">
+              <pre className="bg-[#1e1e1e] text-gray-100 p-3 sm:p-4 overflow-x-auto text-xs sm:text-sm max-w-full">
+                <code className="font-mono leading-relaxed block whitespace-pre-wrap break-words">
                   {highlightedCode}
                 </code>
               </pre>
@@ -395,19 +396,29 @@ const MessageItem = ({ message }) => {
     }).filter(Boolean);
   };
 
+  const handleRetry = () => {
+    if (onRetry && message.retryContent) {
+      onRetry(message.retryContent, message.id);
+    }
+  };
+
   return (
     <div
       className={`
         flex gap-2 sm:gap-3 p-3 sm:p-6 mb-2 sm:mb-4 group hover:bg-opacity-80 transition-all rounded-xl shadow-sm hover:shadow-md
-        max-w-full
-        ${isUser ? 'bg-white border-l-4 border-blue-500' : 'bg-gradient-to-r from-purple-50 to-pink-50 border-l-4 border-purple-500'}
+        max-w-full w-full overflow-hidden
+        ${isUser ? 'bg-white border-l-4 border-blue-500' : 
+          isError ? 'bg-red-50 border-l-4 border-red-500' : 
+          'bg-gradient-to-r from-purple-50 to-pink-50 border-l-4 border-purple-500'}
       `}
     >
       {/* Avatar */}
       <div
         className={`
           flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-md
-          ${isUser ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 'bg-gradient-to-br from-purple-500 to-pink-500'}
+          ${isUser ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 
+            isError ? 'bg-gradient-to-br from-red-500 to-red-600' :
+            'bg-gradient-to-br from-purple-500 to-pink-500'}
         `}
       >
         {isUser ? (
@@ -418,6 +429,10 @@ const MessageItem = ({ message }) => {
               clipRule="evenodd"
             />
           </svg>
+        ) : isError ? (
+          <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
         ) : (
           <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -426,10 +441,10 @@ const MessageItem = ({ message }) => {
       </div>
 
       {/* Message Content */}
-      <div className="flex-1 min-w-0 max-w-full">
+      <div className="flex-1 min-w-0 overflow-hidden">
         <div className="flex items-center justify-between mb-1 sm:mb-2 flex-wrap gap-1">
-          <span className={`font-bold text-sm ${isUser ? 'text-blue-700' : 'text-purple-700'}`}>
-            {isUser ? 'You' : 'AI Assistant'}
+          <span className={`font-bold text-sm ${isUser ? 'text-blue-700' : isError ? 'text-red-700' : 'text-purple-700'}`}>
+            {isUser ? 'You' : isError ? 'AI Assistant (Error)' : 'AI Assistant'}
           </span>
           <div className="flex items-center gap-2">
             {message.timestamp && (
@@ -437,7 +452,7 @@ const MessageItem = ({ message }) => {
                 {formatTimestamp(message.timestamp)}
               </span>
             )}
-            {!isUser && (
+            {!isUser && !isError && (
               <button
                 onClick={async () => {
                   try {
@@ -465,6 +480,19 @@ const MessageItem = ({ message }) => {
           </div>
         </div>
         {formatContent(message.content)}
+        
+        {/* Retry Button for Error Messages */}
+        {isError && message.retryContent && (
+          <button
+            onClick={handleRetry}
+            className="mt-3 flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all shadow-md hover:shadow-lg"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Retry
+          </button>
+        )}
       </div>
     </div>
   );

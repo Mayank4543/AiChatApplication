@@ -210,6 +210,12 @@ export const ChatProvider = ({ children }) => {
     }));
   };
 
+  const renameChat = (chatId, newTitle) => {
+    setChats(prevChats => prevChats.map(chat => 
+      chat.id === chatId ? { ...chat, title: newTitle } : chat
+    ));
+  };
+
   const deleteChat = (chatId) => {
     const updatedChats = chats.filter(chat => chat.id !== chatId);
     setChats(updatedChats);
@@ -218,6 +224,32 @@ export const ChatProvider = ({ children }) => {
     if (chatId === currentChatId) {
       setCurrentChatId(updatedChats.length > 0 ? updatedChats[0].id : null);
     }
+  };
+
+  const deleteMessage = (messageId) => {
+    setChats(prevChats => prevChats.map(chat => {
+      if (chat.id === currentChatId) {
+        return {
+          ...chat,
+          messages: chat.messages.filter(msg => msg.id !== messageId),
+        };
+      }
+      return chat;
+    }));
+  };
+
+  const updateMessage = (messageId, updates) => {
+    setChats(prevChats => prevChats.map(chat => {
+      if (chat.id === currentChatId) {
+        return {
+          ...chat,
+          messages: chat.messages.map(msg => 
+            msg.id === messageId ? { ...msg, ...updates } : msg
+          ),
+        };
+      }
+      return chat;
+    }));
   };
 
   const clearAllChats = () => {
@@ -245,7 +277,10 @@ export const ChatProvider = ({ children }) => {
         selectChat,
         toggleSidebar,
         addMessage,
+        renameChat,
         deleteChat,
+        deleteMessage,
+        updateMessage,
         clearAllChats,
         setIsLoading,
         setError,

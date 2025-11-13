@@ -3,7 +3,7 @@ import { useChat } from '../context/ChatContext';
 import MessageItem from './MessageItem';
 import TypingIndicator from './TypingIndicator';
 
-const MessageList = ({ messages }) => {
+const MessageList = ({ messages, onRetry }) => {
   const messagesEndRef = useRef(null);
   const { isLoading } = useChat();
 
@@ -16,7 +16,7 @@ const MessageList = ({ messages }) => {
   }, [messages, isLoading]);
 
   return (
-    <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-2">
+    <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-4 space-y-2 w-full">
       {messages.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-full text-gray-400">
           <svg
@@ -38,7 +38,7 @@ const MessageList = ({ messages }) => {
       ) : (
         <>
           {messages.map((message) => (
-            <MessageItem key={message.id} message={message} />
+            <MessageItem key={message.id} message={message} onRetry={onRetry} />
           ))}
           {isLoading && <TypingIndicator />}
           <div ref={messagesEndRef} />

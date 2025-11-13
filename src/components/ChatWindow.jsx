@@ -4,32 +4,85 @@ import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 
 const ChatWindow = () => {
-  const { currentChat, toggleSidebar, addMessage, isLoading, setIsLoading, setError } = useChat();
+  const { currentChat, toggleSidebar, addMessage, updateMessage, isLoading, setIsLoading, setError } = useChat();
 
-  const handleSendMessage = async (content) => {
+  const handleSendMessage = async (content, retryMessageId = null) => {
+    let errorMessageId = null;
+    
     try {
       // Clear any previous errors
       setError(null);
 
-      // Add user message immediately
-      addMessage(content, 'user');
+      // If retrying, update the existing error message
+      if (retryMessageId) {
+        updateMessage(retryMessageId, { 
+          content: '⏳ Retrying...', 
+          error: false,
+          isRetrying: true 
+        });
+      } else {
+        // Add user message immediately
+        addMessage(content, 'user');
+      }
 
       // Set loading state
       setIsLoading(true);
 
       // Get conversation history for context (last 10 messages)
-      const conversationHistory = currentChat?.messages.slice(-10) || [];
+      // Filter out error messages from history
+      const conversationHistory = (currentChat?.messages || [])
+        .filter(msg => !msg.error)
+        .slice(-10);
 
       // Call Gemini API
       const aiResponse = await getAIResponse(content, conversationHistory);
 
-      // Add AI response
-      addMessage(aiResponse, 'assistant');
+      // Add or update AI response
+      if (retryMessageId) {
+        updateMessage(retryMessageId, { 
+          content: aiResponse, 
+          error: false,
+          isRetrying: false,
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        addMessage(aiResponse, 'assistant');
+      }
 
     } catch (error) {
       console.error('Error getting AI response:', error);
       setError(error.message);
-      addMessage('⚠️ Sorry, I encountered an error. Please try again.', 'assistant');
+      
+      const errorContent = `⚠️ Sorry, I encountered an error: ${error.message}`;
+      
+      if (retryMessageId) {
+        updateMessage(retryMessageId, { 
+          content: errorContent, 
+          error: true,
+          isRetrying: false,
+          retryContent: content,
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        // Add error message with retry information
+        const errorMsg = {
+          id: Date.now(),
+          role: 'assistant',
+          content: errorContent,
+          timestamp: new Date().toISOString(),
+          error: true,
+          retryContent: content,
+        };
+        
+        // Store the error message ID for potential retry
+        errorMessageId = errorMsg.id;
+        addMessage(errorMsg.content, 'assistant');
+        
+        // Update the message to include error flag
+        setTimeout(() => {
+          updateMessage(errorMsg.id, { error: true, retryContent: content });
+        }, 100);
+      }
     } finally {
       // Always clear loading state
       setIsLoading(false);
@@ -97,7 +150,7 @@ const ChatWindow = () => {
       </div>
 
       {/* Messages Area */}
-      <MessageList messages={currentChat?.messages || []} />
+      <MessageList messages={currentChat?.messages || []} onRetry={handleSendMessage} />
 
       {/* Input Area */}
       <MessageInput onSendMessage={handleSendMessage} />
