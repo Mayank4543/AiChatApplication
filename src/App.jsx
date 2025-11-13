@@ -5,11 +5,8 @@ import ChatWindow from './components/ChatWindow';
 function App() {
   return (
     <ChatProvider>
-      <div className="flex h-screen overflow-hidden bg-gray-100">
-     
+      <div className="flex h-screen overflow-hidden bg-gray-100 w-full max-w-full">
         <Sidebar />
-        
-
         <ChatWindow />
       </div>
     </ChatProvider>

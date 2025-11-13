@@ -11,15 +11,7 @@ const MessageInput = ({ onSendMessage }) => {
 
   const MAX_CHARS = 2000;
 
-  // Suggested prompts
-  const suggestedPrompts = [
-    "Explain quantum computing in simple terms",
-    "Write a Python function to sort an array",
-    "What are the benefits of React hooks?",
-    "Create a meal plan for weight loss",
-    "Summarize the latest AI trends",
-    "Debug this code snippet",
-  ];
+
 
   // Auto-resize textarea
   useEffect(() => {
@@ -65,7 +57,7 @@ const MessageInput = ({ onSendMessage }) => {
     if (message.trim() && !isLoading && message.length <= MAX_CHARS) {
       onSendMessage(message);
       setMessage('');
-      setShowSuggestions(true);
+      
     }
   };
 
@@ -91,11 +83,7 @@ const MessageInput = ({ onSendMessage }) => {
     }
   };
 
-  const handleSuggestedPrompt = (prompt) => {
-    setMessage(prompt);
-    setShowSuggestions(false);
-    textareaRef.current?.focus();
-  };
+ 
 
   const handleMessageChange = (e) => {
     const newMessage = e.target.value;
@@ -118,46 +106,22 @@ const MessageInput = ({ onSendMessage }) => {
   const isOverLimit = charCount > MAX_CHARS;
 
   return (
-    <div className="border-t border-gray-200 bg-white">
-      {/* Suggested Prompts */}
-      {showSuggestions && !message.trim() && !isLoading && (
-        <div className="px-4 pt-4 pb-2">
-          <p className="text-xs font-semibold text-gray-500 mb-2 flex items-center gap-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
-            Try asking:
-          </p>
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300">
-            {suggestedPrompts.map((prompt, index) => (
-              <button
-                key={index}
-                onClick={() => handleSuggestedPrompt(prompt)}
-                className="flex-shrink-0 px-3 py-2 text-xs bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 text-gray-700 rounded-full border border-blue-200 transition-all hover:shadow-md whitespace-nowrap"
-              >
-                {prompt}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Input Form */}
-      <form onSubmit={handleSubmit} className="p-4">
-        <div className="flex gap-2 items-end">
+    <div className="border-t border-gray-200 bg-white w-full max-w-full overflow-x-hidden">
+      <form onSubmit={handleSubmit} className="p-2 sm:p-4 w-full">
+        <div className="flex gap-1 sm:gap-2 items-end w-full max-w-full">
           {/* Voice Input Button */}
           <button
             type="button"
             onClick={toggleVoiceInput}
             disabled={isLoading}
-            className={`p-3 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`p-2 sm:p-3 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 ${
               isListening 
                 ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
-                : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white'
+                : 'bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white'
             }`}
             title={isListening ? "Stop listening" : "Voice input"}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {isListening ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               ) : (
@@ -167,63 +131,63 @@ const MessageInput = ({ onSendMessage }) => {
           </button>
 
           {/* Textarea Container */}
-          <div className="flex-1 relative">
+          <div className="flex-1 relative min-w-0 overflow-hidden">
             <textarea
               ref={textareaRef}
               value={message}
               onChange={handleMessageChange}
               onKeyDown={handleKeyDown}
               disabled={isLoading}
-              placeholder={isListening ? "🎤 Listening..." : isLoading ? "AI is responding..." : "Type your message here... (Shift+Enter for new line)"}
-              className={`w-full resize-none rounded-lg border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[56px] max-h-32 disabled:bg-gray-50 disabled:cursor-not-allowed transition-colors ${
+              placeholder={isListening ? "🎤 Listening..." : isLoading ? "AI is responding..." : "Type your message... "}
+              className={`w-full resize-none rounded-lg border px-2 sm:px-4 py-2 sm:py-3 pr-16 sm:pr-20 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-10 sm:min-h-14 max-h-32 disabled:bg-gray-50 disabled:cursor-not-allowed transition-colors ${
                 isOverLimit ? 'border-red-500' : isNearLimit ? 'border-yellow-500' : 'border-gray-300'
               }`}
               rows="1"
             />
             
             {/* Character Counter & Clear Button */}
-            <div className="absolute bottom-2 right-2 flex items-center gap-2">
-              {message && !isLoading && (
-                <button
-                  type="button"
-                  onClick={clearMessage}
-                  className="p-1 hover:bg-gray-200 rounded transition-colors"
-                  title="Clear message"
-                >
-                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
-              {message && (
-                <span className={`text-xs font-medium ${
+            {message && (
+              <div className="absolute bottom-1.5 sm:bottom-2 right-1.5 sm:right-2 flex items-center gap-1 bg-white bg-opacity-90 rounded px-1">
+                {!isLoading && (
+                  <button
+                    type="button"
+                    onClick={clearMessage}
+                    className="p-0.5 sm:p-1 hover:bg-gray-200 rounded transition-colors"
+                    title="Clear message"
+                  >
+                    <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+                <span className={`text-[10px] sm:text-xs font-medium whitespace-nowrap ${
                   isOverLimit ? 'text-red-600' : isNearLimit ? 'text-yellow-600' : 'text-gray-400'
                 }`}>
                   {charCount}/{MAX_CHARS}
                 </span>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Send Button */}
           <button
             type="submit"
             disabled={!message.trim() || isLoading || isOverLimit}
-            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-2 min-h-[56px]"
+            className="px-3 sm:px-6 py-2 sm:py-3 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-1 sm:gap-2 min-h-10 sm:min-h-14 flex-shrink-0"
           >
             {isLoading ? (
               <>
-                <span className="hidden sm:inline">Sending</span>
-                <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <span className="hidden sm:inline text-sm sm:text-base">Sending</span>
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
               </>
             ) : (
               <>
-                <span className="hidden sm:inline">Send</span>
+                <span className="hidden sm:inline text-sm sm:text-base">Send</span>
                 <svg
-                  className="w-5 h-5"
+                  className="w-4 h-4 sm:w-5 sm:h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -242,11 +206,11 @@ const MessageInput = ({ onSendMessage }) => {
 
         {/* Listening Indicator */}
         {isListening && (
-          <div className="mt-2 flex items-center gap-2 text-sm text-red-600">
-            <svg className="w-4 h-4 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+          <div className="mt-2 flex items-center gap-2 text-xs sm:text-sm text-red-600">
+            <svg className="w-3 h-3 sm:w-4 sm:h-4 animate-pulse flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
             </svg>
-            <span>Listening... Speak now</span>
+            <span className="truncate">Listening... Speak now</span>
           </div>
         )}
       </form>

@@ -90,9 +90,9 @@ const ChatWindow = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-screen bg-gray-100">
+    <div className="flex-1 flex flex-col h-screen bg-gray-100 w-full max-w-full overflow-x-hidden">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-4 shadow-sm">
+      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-4 shadow-sm w-full">
         {/* Hamburger Menu Button (Mobile only) */}
         <button
           onClick={toggleSidebar}
