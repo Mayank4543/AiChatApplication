@@ -255,7 +255,7 @@ const MessageItem = ({ message, onRetry, onSuggestionClick, isLastAIMessage, use
       if (line.startsWith('### ')) {
         elements.push(
           <h3 key={index} className="text-lg sm:text-xl font-bold text-gray-900 mt-4 sm:mt-5 mb-2 sm:mb-3 border-b border-gray-200 pb-2 break-words">
-            {line.substring(4)}
+            {formatInlineStyles(line.substring(4))}
           </h3>
         );
         return;
@@ -264,7 +264,7 @@ const MessageItem = ({ message, onRetry, onSuggestionClick, isLastAIMessage, use
       if (line.startsWith('## ')) {
         elements.push(
           <h2 key={index} className="text-xl sm:text-2xl font-bold text-gray-900 mt-5 sm:mt-6 mb-2 sm:mb-3 border-b-2 border-purple-200 pb-2 break-words">
-            {line.substring(3)}
+            {formatInlineStyles(line.substring(3))}
           </h2>
         );
         return;
@@ -273,7 +273,7 @@ const MessageItem = ({ message, onRetry, onSuggestionClick, isLastAIMessage, use
       if (line.startsWith('# ')) {
         elements.push(
           <h1 key={index} className="text-2xl sm:text-3xl font-bold text-gray-900 mt-5 sm:mt-6 mb-3 sm:mb-4 border-b-2 border-purple-300 pb-3 break-words">
-            {line.substring(2)}
+            {formatInlineStyles(line.substring(2))}
           </h1>
         );
         return;
@@ -337,108 +337,86 @@ const MessageItem = ({ message, onRetry, onSuggestionClick, isLastAIMessage, use
     return <div className="text-gray-800 text-sm sm:text-base">{elements}</div>;
   };
 
-  // Format inline styles (bold, italic, code, links)
+  // Format inline styles (bold, italic, code, links) - No placeholders approach
   const formatInlineStyles = (text) => {
     if (!text) return null;
     
-    const parts = [];
-    let currentText = String(text);
+    const elements = [];
+    let remaining = String(text);
     let key = 0;
 
-    // Inline code (must be before bold/italic to avoid conflicts)
-    currentText = currentText.replace(/`([^`]+?)`/g, (match, code) => {
-      const placeholder = `__XCODE${key}X__`;
-      parts.push({
-        type: 'code',
-        content: code,
-        placeholder
-      });
-      key++;
-      return placeholder;
-    });
-
-    // Bold - handle **text** pattern only
-    currentText = currentText.replace(/\*\*([^*]+?)\*\*/g, (match, bold) => {
-      const placeholder = `__XBOLD${key}X__`;
-      parts.push({
-        type: 'bold',
-        content: bold,
-        placeholder
-      });
-      key++;
-      return placeholder;
-    });
-
-    // Italic - single * (but not double)
-    currentText = currentText.replace(/(?<!\*)\*(?!\*)([^*]+?)\*(?!\*)/g, (match, italic) => {
-      const placeholder = `__XITALIC${key}X__`;
-      parts.push({
-        type: 'italic',
-        content: italic,
-        placeholder
-      });
-      key++;
-      return placeholder;
-    });
-
-    // Links [text](url)
-    currentText = currentText.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
-      const placeholder = `__XLINK${key}X__`;
-      parts.push({
-        type: 'link',
-        content: text,
-        url: url,
-        placeholder
-      });
-      key++;
-      return placeholder;
-    });
-
-    // Replace placeholders with React elements
-    const segments = currentText.split(/(__X(?:CODE|BOLD|ITALIC|LINK)\d+X__)/g);
-    
-    return segments.map((segment, index) => {
-      // Skip empty segments
-      if (!segment) return null;
-      
-      const part = parts.find(p => p.placeholder === segment);
-      
-      if (part) {
-        if (part.type === 'code') {
-          return (
-            <code key={index} className="bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded text-xs sm:text-sm font-mono border border-purple-200 break-all">
-              {part.content}
-            </code>
-          );
-        }
-        if (part.type === 'bold') {
-          return <strong key={index} className="font-bold text-gray-900 break-words">{part.content}</strong>;
-        }
-        if (part.type === 'italic') {
-          return <em key={index} className="italic text-gray-700 break-words">{part.content}</em>;
-        }
-        if (part.type === 'link') {
-          return (
-            <a
-              key={index}
-              href={part.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-700 underline font-medium break-all"
-            >
-              {part.content}
-            </a>
-          );
-        }
+    while (remaining.length > 0) {
+      // Try to match inline code first (highest priority)
+      const codeMatch = remaining.match(/^`([^`]+?)`/);
+      if (codeMatch) {
+        elements.push(
+          <code key={key++} className="bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded text-xs sm:text-sm font-mono border border-purple-200 break-all">
+            {codeMatch[1]}
+          </code>
+        );
+        remaining = remaining.substring(codeMatch[0].length);
+        continue;
       }
-      
-      // Only return text if it's not a placeholder pattern
-      if (!segment.match(/^__X(?:CODE|BOLD|ITALIC|LINK)\d+X__$/)) {
-        return segment;
+
+      // Try to match bold **text**
+      const boldMatch = remaining.match(/^\*\*([^*]+?)\*\*/);
+      if (boldMatch) {
+        elements.push(
+          <strong key={key++} className="font-bold text-gray-900 break-words">
+            {boldMatch[1]}
+          </strong>
+        );
+        remaining = remaining.substring(boldMatch[0].length);
+        continue;
       }
+
+      // Try to match links [text](url)
+      const linkMatch = remaining.match(/^\[([^\]]+)\]\(([^)]+)\)/);
+      if (linkMatch) {
+        elements.push(
+          <a
+            key={key++}
+            href={linkMatch[2]}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-700 underline font-medium break-all"
+          >
+            {linkMatch[1]}
+          </a>
+        );
+        remaining = remaining.substring(linkMatch[0].length);
+        continue;
+      }
+
+      // Try to match italic *text* (single asterisk, not double)
+      const italicMatch = remaining.match(/^\*([^*]+?)\*/);
+      if (italicMatch && !remaining.startsWith('**')) {
+        elements.push(
+          <em key={key++} className="italic text-gray-700 break-words">
+            {italicMatch[1]}
+          </em>
+        );
+        remaining = remaining.substring(italicMatch[0].length);
+        continue;
+      }
+
+      // No match found, take one character as plain text
+      const nextSpecialChar = remaining.search(/[`*\[]/);
+      const plainText = nextSpecialChar === -1 
+        ? remaining 
+        : remaining.substring(0, nextSpecialChar);
       
-      return null;
-    }).filter(Boolean);
+      if (plainText) {
+        elements.push(plainText);
+        remaining = remaining.substring(plainText.length);
+      } else {
+        // If we can't find special chars but have content, take one char
+        elements.push(remaining[0]);
+        remaining = remaining.substring(1);
+      }
+    }
+
+    return elements.length > 0 ? elements : text;
   };
 
   const handleRetry = () => {
