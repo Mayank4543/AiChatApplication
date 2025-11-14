@@ -3,7 +3,7 @@ import { useChat } from '../context/ChatContext';
 import MessageItem from './MessageItem';
 import TypingIndicator from './TypingIndicator';
 
-const MessageList = ({ messages, onRetry }) => {
+const MessageList = ({ messages, onRetry, onSuggestionClick }) => {
   const messagesEndRef = useRef(null);
   const { isLoading } = useChat();
 
@@ -37,9 +37,28 @@ const MessageList = ({ messages, onRetry }) => {
         </div>
       ) : (
         <>
-          {messages.map((message) => (
-            <MessageItem key={message.id} message={message} onRetry={onRetry} />
-          ))}
+          {messages.map((message, index) => {
+            // Check if this is the last AI message (not loading)
+            const isLastAIMessage = !isLoading && 
+              message.role === 'assistant' && 
+              index === messages.length - 1;
+            
+            // Find the user question that prompted this AI response
+            const userQuestion = message.role === 'assistant' && index > 0 
+              ? messages[index - 1]?.content 
+              : null;
+            
+            return (
+              <MessageItem 
+                key={message.id} 
+                message={message} 
+                onRetry={onRetry}
+                onSuggestionClick={onSuggestionClick}
+                isLastAIMessage={isLastAIMessage}
+                userQuestion={userQuestion}
+              />
+            );
+          })}
           {isLoading && <TypingIndicator />}
           <div ref={messagesEndRef} />
         </>

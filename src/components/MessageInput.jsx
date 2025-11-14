@@ -107,21 +107,21 @@ const MessageInput = ({ onSendMessage }) => {
 
   return (
     <div className="border-t border-gray-200 bg-white w-full max-w-full overflow-x-hidden">
-      <form onSubmit={handleSubmit} className="p-2 sm:p-4 w-full">
-        <div className="flex gap-1 sm:gap-2 items-end w-full max-w-full">
+      <form onSubmit={handleSubmit} className="p-3 sm:p-4 w-full">
+        <div className="flex gap-2 items-end w-full max-w-full">
           {/* Voice Input Button */}
           <button
             type="button"
             onClick={toggleVoiceInput}
             disabled={isLoading}
-            className={`p-2 sm:p-3 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed shrink-0 ${
+            className={`p-3 rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed shrink-0 ${
               isListening 
                 ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
                 : 'bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white'
             }`}
             title={isListening ? "Stop listening" : "Voice input"}
           >
-            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {isListening ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               ) : (
@@ -138,30 +138,30 @@ const MessageInput = ({ onSendMessage }) => {
               onChange={handleMessageChange}
               onKeyDown={handleKeyDown}
               disabled={isLoading}
-              placeholder={isListening ? "🎤 Listening..." : isLoading ? "AI is responding..." : "Type your message... "}
-              className={`w-full resize-none rounded-lg border px-2 sm:px-4 py-2 sm:py-3 pr-16 sm:pr-20 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-10 sm:min-h-14 max-h-32 disabled:bg-gray-50 disabled:cursor-not-allowed transition-colors ${
-                isOverLimit ? 'border-red-500' : isNearLimit ? 'border-yellow-500' : 'border-gray-300'
+              placeholder={isListening ? "🎤 Listening..." : isLoading ? "AI is responding..." : "Type your message..."}
+              className={`w-full resize-none rounded-xl border-2 px-4 py-3 ${message ? 'pr-20' : ''} text-base focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[52px] max-h-32 disabled:bg-gray-50 disabled:cursor-not-allowed transition-all ${
+                isOverLimit ? 'border-red-500' : isNearLimit ? 'border-yellow-500' : 'border-gray-300 focus:border-purple-500'
               }`}
               rows="1"
             />
             
             {/* Character Counter & Clear Button */}
             {message && (
-              <div className="absolute bottom-1.5 sm:bottom-2 right-1.5 sm:right-2 flex items-center gap-1 bg-white bg-opacity-90 rounded px-1">
+              <div className="absolute bottom-2.5 right-2 flex items-center gap-1.5 bg-white bg-opacity-95 rounded-lg px-2 py-1 shadow-sm">
                 {!isLoading && (
                   <button
                     type="button"
                     onClick={clearMessage}
-                    className="p-0.5 sm:p-1 hover:bg-gray-200 rounded transition-colors"
+                    className="p-1 hover:bg-gray-200 rounded-md transition-colors"
                     title="Clear message"
                   >
-                    <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5 text-gray-500 hover:text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
                 )}
-                <span className={`text-[10px] sm:text-xs font-medium whitespace-nowrap ${
-                  isOverLimit ? 'text-red-600' : isNearLimit ? 'text-yellow-600' : 'text-gray-400'
+                <span className={`text-xs font-medium whitespace-nowrap ${
+                  isOverLimit ? 'text-red-600' : isNearLimit ? 'text-yellow-600' : 'text-gray-500'
                 }`}>
                   {charCount}/{MAX_CHARS}
                 </span>
@@ -173,44 +173,38 @@ const MessageInput = ({ onSendMessage }) => {
           <button
             type="submit"
             disabled={!message.trim() || isLoading || isOverLimit}
-            className="px-3 sm:px-6 py-2 sm:py-3 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-1 sm:gap-2 min-h-10 sm:min-h-14 shrink-0"
+            className="px-5 py-3 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 min-h-[52px] shrink-0"
           >
             {isLoading ? (
-              <>
-                <span className="hidden sm:inline text-sm sm:text-base">Sending</span>
-                <svg className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              </>
+              <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
             ) : (
-              <>
-                <span className="hidden sm:inline text-sm sm:text-base">Send</span>
-                <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                  />
-                </svg>
-              </>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                />
+              </svg>
             )}
           </button>
         </div>
 
         {/* Listening Indicator */}
         {isListening && (
-          <div className="mt-2 flex items-center gap-2 text-xs sm:text-sm text-red-600">
-            <svg className="w-3 h-3 sm:w-4 sm:h-4 animate-pulse shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <div className="mt-3 flex items-center justify-center gap-2 text-sm text-red-600 bg-red-50 py-2 px-4 rounded-lg">
+            <svg className="w-4 h-4 animate-pulse shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
             </svg>
-            <span className="truncate">Listening... Speak now</span>
+            <span className="font-medium">Listening... Speak now</span>
           </div>
         )}
       </form>

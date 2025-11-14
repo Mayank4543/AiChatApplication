@@ -1,10 +1,55 @@
 import { useState } from 'react';
 
-const MessageItem = ({ message, onRetry }) => {
+const MessageItem = ({ message, onRetry, onSuggestionClick, isLastAIMessage, userQuestion }) => {
   const isUser = message.role === 'user';
   const [copied, setCopied] = useState(false);
   const [copiedCode, setCopiedCode] = useState({});
   const isError = message.error === true;
+
+  // Generate intelligent follow-up suggestions based on user question AND AI response
+  const generateSuggestions = (aiResponse, userQuery) => {
+    const suggestions = [];
+    const lowerResponse = aiResponse.toLowerCase();
+    const lowerQuery = userQuery?.toLowerCase() || '';
+
+    // Analyze response type and complexity
+    const hasCodeBlock = aiResponse.includes('```');
+    const hasSteps = /\d+\.|step|first|second|third/i.test(aiResponse);
+    const isTechnical = /function|class|const|import|export|async|await/i.test(aiResponse);
+    const isExplanation = lowerResponse.includes('because') || lowerResponse.includes('reason') || lowerResponse.includes('explanation');
+    
+    // Check user's query intent
+    const askedHow = /how|what|explain|why/i.test(lowerQuery);
+    const askedExample = /example|sample|demo|show/i.test(lowerQuery);
+    const askedComparison = /difference|compare|versus|vs|better/i.test(lowerQuery);
+    const askedTroubleshoot = /error|problem|issue|fix|debug|not working/i.test(lowerQuery);
+
+    // Smart contextual suggestions based on conversation flow
+    if (hasCodeBlock && !askedExample) {
+      suggestions.push('Can you explain how this code works?', 'Show me a simpler version', 'What are common mistakes with this?');
+    } else if (hasCodeBlock && askedExample) {
+      suggestions.push('Can you optimize this code?', 'What about edge cases?', 'How do I test this?');
+    } else if (hasSteps && !askedTroubleshoot) {
+      suggestions.push('What if I skip a step?', 'Can you automate this process?', 'What are common issues?');
+    } else if (isTechnical && !askedHow) {
+      suggestions.push('Explain this in simpler terms', 'What are the alternatives?', 'Show me a real-world use case');
+    } else if (isExplanation && !askedComparison) {
+      suggestions.push('What are the pros and cons?', 'Compare this with alternatives', 'Show me a practical example');
+    } else if (askedTroubleshoot) {
+      suggestions.push('How can I prevent this in the future?', 'What causes this error?', 'Are there debugging tools for this?');
+    } else if (lowerResponse.includes('react') || lowerResponse.includes('component')) {
+      suggestions.push('Show me a complete working example', 'What about React hooks for this?', 'Best practices for this in React?');
+    } else if (lowerResponse.includes('performance') || lowerResponse.includes('optimize')) {
+      suggestions.push('How much improvement can I expect?', 'What are the trade-offs?', 'How do I measure this?');
+    } else if (lowerResponse.includes('install') || lowerResponse.includes('setup')) {
+      suggestions.push('What dependencies do I need?', 'Any common setup errors?', 'How do I verify installation?');
+    } else {
+      // Generic but still contextual
+      suggestions.push('Can you show me an example?', 'What else should I know?', 'How does this compare to alternatives?');
+    }
+
+    return suggestions.slice(0, 3); // Return max 3 suggestions
+  };
 
   // Syntax highlighting for code blocks (using React components)
   const highlightCode = (code, language) => {
@@ -409,7 +454,7 @@ const MessageItem = ({ message, onRetry }) => {
         max-w-full w-full overflow-hidden
         ${isUser ? 'bg-white border-l-4 border-blue-500' : 
           isError ? 'bg-red-50 border-l-4 border-red-500' : 
-          'bg-gradient-to-r from-purple-50 to-pink-50 border-l-4 border-purple-500'}
+          'bg-linear-to-r from-purple-50 to-pink-50 border-l-4 border-purple-500'}
       `}
     >
       {/* Avatar */}
@@ -492,6 +537,29 @@ const MessageItem = ({ message, onRetry }) => {
             </svg>
             Retry
           </button>
+        )}
+
+        {/* AI Suggestion Chips - Only show on last AI message */}
+        {!isUser && !isError && isLastAIMessage && onSuggestionClick && (
+          <div className="mt-4">
+            <div className="flex items-center gap-2 mb-2">
+              <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-xs font-semibold text-gray-600">Follow-up questions:</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {generateSuggestions(message.content, userQuestion).map((suggestion, index) => (
+                <button
+                  key={index}
+                  onClick={() => onSuggestionClick(suggestion)}
+                  className="px-3 py-2 text-sm bg-gradient-to-r from-purple-50 to-blue-50 hover:from-purple-100 hover:to-blue-100 text-purple-700 rounded-lg border border-purple-200 transition-all hover:shadow-md hover:scale-105 active:scale-95 font-medium"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </div>

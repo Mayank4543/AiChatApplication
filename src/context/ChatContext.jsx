@@ -186,6 +186,42 @@ export const ChatProvider = ({ children }) => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  const generateSmartTitle = (message) => {
+    // Clean the message
+    const cleaned = message.trim();
+    
+    // If message is short enough, use as is
+    if (cleaned.length <= 40) {
+      return cleaned;
+    }
+    
+    // Try to extract meaningful title
+    // 1. Check if it's a question
+    const questionMatch = cleaned.match(/^(what|how|why|when|where|who|can|could|should|is|are|do|does|explain|tell|show|write|create|make|help)/i);
+    if (questionMatch) {
+      // Take first sentence or first 40 chars
+      const firstSentence = cleaned.split(/[.!?]/)[0];
+      if (firstSentence.length <= 40) {
+        return firstSentence;
+      }
+      // Take first 40 chars and find last complete word
+      const truncated = cleaned.substring(0, 40);
+      const lastSpace = truncated.lastIndexOf(' ');
+      return lastSpace > 20 ? truncated.substring(0, lastSpace) : truncated;
+    }
+    
+    // 2. For other messages, take first complete sentence or phrase
+    const firstSentence = cleaned.split(/[.!?]/)[0];
+    if (firstSentence.length <= 40) {
+      return firstSentence;
+    }
+    
+    // 3. Take first 40 chars and find last complete word (no ...)
+    const truncated = cleaned.substring(0, 40);
+    const lastSpace = truncated.lastIndexOf(' ');
+    return lastSpace > 20 ? truncated.substring(0, lastSpace) : truncated.substring(0, 37);
+  };
+
   const addMessage = (content, role = 'user') => {
     const newMessage = {
       id: Date.now(),
@@ -200,9 +236,9 @@ export const ChatProvider = ({ children }) => {
         return {
           ...chat,
           messages: updatedMessages,
-          // Auto-generate title from first user message
+          // Auto-generate smart title from first user message
           title: chat.messages.length === 0 && role === 'user' 
-            ? (content.length > 30 ? content.slice(0, 30) + '...' : content)
+            ? generateSmartTitle(content)
             : chat.title,
         };
       }

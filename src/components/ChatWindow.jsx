@@ -90,9 +90,9 @@ const ChatWindow = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-screen bg-gray-100 w-full max-w-full overflow-x-hidden">
+    <div className="flex-1 flex flex-col h-screen bg-gray-100 w-full max-w-full overflow-hidden">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-4 shadow-sm w-full">
+      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-4 shadow-sm w-full flex-shrink-0">
         {/* Hamburger Menu Button (Mobile only) */}
         <button
           onClick={toggleSidebar}
@@ -114,11 +114,11 @@ const ChatWindow = () => {
         </button>
 
         {/* Chat Title */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h1 className="text-lg font-semibold text-gray-800 truncate">
             {currentChat?.title || 'Select a chat'}
           </h1>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 truncate">
             Powered by Google Gemini AI
           </p>
         </div>
@@ -149,11 +149,22 @@ const ChatWindow = () => {
         </div>
       </div>
 
-      {/* Messages Area */}
-      <MessageList messages={currentChat?.messages || []} onRetry={handleSendMessage} />
+      {/* Messages Area - Scrollable */}
+      <div className="flex-1 overflow-y-auto">
+        <MessageList 
+          messages={currentChat?.messages || []} 
+          onRetry={handleSendMessage}
+          onSuggestionClick={(suggestion) => {
+            // Automatically send the suggestion to AI
+            handleSendMessage(suggestion);
+          }}
+        />
+      </div>
 
-      {/* Input Area */}
-      <MessageInput onSendMessage={handleSendMessage} />
+      {/* Input Area - Sticky at bottom */}
+      <div className="flex-shrink-0">
+        <MessageInput onSendMessage={handleSendMessage} />
+      </div>
     </div>
   );
 };
